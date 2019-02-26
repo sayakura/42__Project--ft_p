@@ -12,8 +12,8 @@
 
 FLAGS =  -Wextra -g -fsanitize=address 
 client:
-	gcc $(FLAGS) client.c ./libft/libft.a client_do_op.c client_do_op2.c -o client
+	gcc $(FLAGS) client.c ./libft/libft.a client_do_op.c client_do_op2.c common.c -o client
 server:
-	gcc $(FLAGS) s.c ./libft/libft.a server_do_op.c -o server
+	gcc $(FLAGS) s.c ./libft/libft.a server_do_op.c common.c -o server
 re:
 	rm server && make server

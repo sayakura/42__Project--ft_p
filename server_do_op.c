@@ -1,36 +1,7 @@
 #include "client.h"
+#include "common.h"
 
 extern char    *g_home_dir;
-
-int     receive_file(int client_socket, int file_size, int received_file_fd)
-{
-    int     remain_data;
-    int     len;
-    char    buffer[BUFSIZ];
-
-    remain_data = file_size;
-    while (remain_data > 0 && \
-        ((len = recv(client_socket, buffer, BUFSIZ, 0)) > 0))
-        remain_data -= (write(received_file_fd, buffer,  len));
-    return (remain_data == 0 ? 1 : 0);
-}
-
-
-int     send_file(int server_sock, int file_size, int fd)
-{
-    char    *data;
-    int     b_sent;
-    char    buffer[BUFSIZ];
-
-    b_sent = 0;
-    data = mmap(NULL, file_size , PROT_READ | PROT_WRITE, MAP_PRIVATE, fd, 0);
-    while ((b_sent != file_size) &&\
-        (b_sent += send(server_sock, data, file_size, 0)) && (b_sent > 0))
-        printf("Sending file....%d / %d\n", b_sent, file_size);
-    close(fd);
-    munmap(data, file_size);
-    return (b_sent == file_size ? 1 : 0);
-}
 
 void     s_do_put(int sock, char *filename)
 {
@@ -59,10 +30,12 @@ void     s_do_get(int sock, char *filename)
     struct stat sb;
     int     fd;
 
-
     if ((fd = open(filename, O_RDONLY)) == -1)
     {
         perror("open");
+        close(fd);
+        sb.st_size = -1;
+        send(sock, &(sb.st_size), sizeof(int), 0);
         return ;
     }
     fstat(fd, &sb);
@@ -72,6 +45,9 @@ void     s_do_get(int sock, char *filename)
         printf("File sent successfully.\n");
     else
         printf("File sending failed..\n");
+    munmap(file, sb.st_size);
+    close(fd);
+    printf("done get\n");
 }
 
 int     chdir_carefully(char *path)
@@ -108,7 +84,7 @@ void     s_do_cd(int sock, char *path)
     send(sock, &status, sizeof(int), 0);
 }
 
-void     s_do_ls(int sock)
+void     s_do_ls(int sock, char *arg)
 {
     int         fd;
     char        *data;
@@ -120,12 +96,15 @@ void     s_do_ls(int sock)
     {
         dup2(1, 7777);
         dup2(fd, 1);
-        execl("/bin/ls", "ls", NULL);
+        dup2(1, 7778);
+        dup2(fd, 2);
+        execl("/bin/ls", "ls", ft_strlen(arg) ? arg : NULL,  NULL);
     }
     else
     {
         wait(NULL);
         dup2(7777, 1);
+        dup2(7778, 2);
         close(fd);
         fd = open(".tmp", O_RDWR, 0666);
         if (fstat(fd, &sb) == -1)
@@ -174,5 +153,20 @@ void    s_do_mkdir(int sock, char *dirname)
     int status;
 
     status = (mkdir(dirname, 0766) == -1) ? 0 : 1;
+    send(sock, &status, sizeof(int), 0);
+}
+void    s_do_rmdir(int sock, char *dirname)
+{
+    int status;
+
+    status = (rmdir(dirname) == -1) ? 0 : 1;
+    send(sock, &status, sizeof(int), 0);
+}
+
+void    s_do_unlink(int sock, char *filename)
+{
+    int status;
+
+    status = (unlink(filename) == -1) ? 0 : 1;
     send(sock, &status, sizeof(int), 0);
 }

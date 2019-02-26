@@ -3,16 +3,14 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-/*for getting file size using stat()*/
 #include<sys/stat.h>
 
-/*for O_RDONLY*/
 #include<fcntl.h>
 #include "s.h"
-#define PORT 7777
 #define max_clients 20
 
 char    *g_home_dir;
+int     g_port;
 
 int     socket_setup()
 {
@@ -34,7 +32,7 @@ int     socket_setup()
     }
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(PORT);
+    address.sin_port = htons(g_port);
     if (bind(main_sock, (struct sockaddr *)&address, sizeof(address))<0)
     {   
         perror("bind failed");
@@ -60,8 +58,9 @@ int     handle_op(int sock)
 
     if (recv(sock, buf, 100, 0) == 0)
         return (0);
-    if ((ft_strncmp(buf, "ls", 2)) == 0)
-        s_do_ls(sock);
+    if ((ft_strncmp(buf, "ls", 2)) == 0 &&
+        (buf[2] == '\0' ||  buf[2] == ' '))
+        s_do_ls(sock, buf + 3);
     else if ((ft_strncmp(buf, "cd ", 3)) == 0) 
         s_do_cd(sock, buf + 3);
     else if ((ft_strncmp(buf, "get ", 4)) == 0)
@@ -70,8 +69,10 @@ int     handle_op(int sock)
         s_do_put(sock, buf + 4);
     else if ((ft_strncmp(buf, "pwd", 3)) == 0)
         s_do_pwd(sock);
-    // else if ((ft_strncmp(buf, "quit ", 5)) == 0)
-    //     s_do_quit(sock);
+    else if ((ft_strncmp(buf, "unlink ", 6)) == 0)
+        s_do_unlink(sock, buf + 7);
+    else if ((ft_strncmp(buf, "rmdir ", 6)) == 0)
+        s_do_rmdir(sock, buf + 6);
     else if ((ft_strncmp(buf, "mkdir ", 6)) == 0)
         s_do_mkdir(sock, buf + 6);
     else
@@ -155,20 +156,25 @@ void    socket_select_setup(int sock)
     }
 }
 
-void    ftp_setup()
+void    ftp_setup(int ac, char **av)
 {
     mkdir("root", 0777);
     chdir("root");
+    if (ac > 1)
+        g_port = ft_atoi(av[1]);
+    else
+        g_port = 7777;
 }
-int     main(void)
+int     main(int ac, char **av)
 {
     int sock;
 
-    ftp_setup();
+    ftp_setup(ac, av);
     g_home_dir = getcwd(NULL, 200);
     sock = socket_setup();
     socket_listen(sock);
-    printf("Listening on port %d \n", PORT);
+    printf("Listening on port %d \n", g_port);
     socket_select_setup(sock);
+    free(g_home_dir);
     return (0);
 }

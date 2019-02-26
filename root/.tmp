@@ -1,7 +1,10 @@
 Makefile
+client.c
+common.c
+common.h
 dir1
+root
 s.c
-temp.txt
 test
 test.png
 test2

@@ -16,6 +16,8 @@
 void     s_do_put(int sock, char *filename);
 void     s_do_get(int sock, char *filename);
 void     s_do_cd(int sock, char *path);
-void     s_do_ls(int sock);
+void     s_do_ls(int sock, char *arg);
 void    s_do_pwd(int sock);
 void    s_do_mkdir(int sock, char *dirname);
+void    s_do_rmdir(int sock, char *dirname);
+void    s_do_unlink(int sock, char *filename);

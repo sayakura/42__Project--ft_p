@@ -7,9 +7,3 @@
 # define BLACK   "\033[0;90m"
 # define RESET   "\x1b[0m"
 # define GO_UP   "\033[F"
-
-
-int     receive_file(int client_socket, int file_size, int received_file_fd);
-int     send_file(int server_sock, int file_size, int fd);
-char    get_char();
-char    *get_input();
