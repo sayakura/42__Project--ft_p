@@ -1,0 +1,16 @@
+Makefile
+a.out
+a.out.dSYM
+client
+client.c
+client.dSYM
+client.h
+client.h.gch
+client_do_op.c
+libft
+s.c
+s.h
+server
+server.dSYM
+server_do_op.c
+temp.txt
