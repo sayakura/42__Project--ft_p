@@ -10,11 +10,11 @@ $ ./server
 $ ./client localhost 7777
 ```
 
-### Supported commands
+### Supported Commands
 ```sh
 ls get put cd pwd
 ```
-## bounus commands
+## Bounus Commands
 | Command | Description |
 | ------ | ------ |
 | lls | [local ls, ls the current directory] |
@@ -24,5 +24,7 @@ ls get put cd pwd
 | unlink | [delete a file on the server side] |
 | rmdir | [remove a directory on the server side] |
 
-## bounus feature
-nice color and IP6 support.
+## Bonus Feature
+- [x] Nice color 
+- [x] IP6 support.
+- [ ] RFC (hell no)
