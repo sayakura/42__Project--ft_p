@@ -1,7 +1,7 @@
 # 42__Project--ft_p
 *A simple, lightweight, concurrent, single-port ftp server implemented in c with select().*
 
-### Usage
+# Usage
 
 ```sh
 $ make
@@ -14,7 +14,7 @@ $ ./client localhost 7777
 ```sh
 ls get put cd pwd
 ```
-## Bounus Commands
+### Bounus Commands
 | Command | Description |
 | ------ | ------ |
 | lls | [local ls, ls the current directory] |
@@ -24,7 +24,7 @@ ls get put cd pwd
 | unlink | [delete a file on the server side] |
 | rmdir | [remove a directory on the server side] |
 
-## Bonus Feature
+### Bonus Feature
 - [x] Nice color 
 - [x] IP6 support.
 - [ ] RFC (hell no)
