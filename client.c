@@ -22,11 +22,11 @@ int
 		do_rmdir(sock, buf + 6);
 	else if ((ft_strncmp(buf, "unlink ", 7)) == 0)
 		do_unlink(sock, buf + 7);
-	else if ((ft_strncmp(buf, "lls", 3)) == 0)
+	else if ((ft_strcmp(buf, "lls")) == 0)
 		do_lls();
 	else if ((ft_strncmp(buf, "lcd ", 4)) == 0)
 		chdir(buf + 4);
-	else if ((ft_strncmp(buf, "lpwd", 3)) == 0)
+	else if ((ft_strcmp(buf, "lpwd")) == 0)
 		do_lpwd();
 	else if ((ft_strncmp(buf, "lmkdir ", 7)) == 0)
 		mkdir(buf + 7, 0766);
@@ -50,7 +50,7 @@ int
 		do_get(sock, buf + 4);
 	else if ((ft_strncmp(buf, "put ", 4)) == 0)
 		do_put(sock, buf + 4);
-	else if ((ft_strncmp(buf, "pwd", 3)) == 0)
+	else if ((ft_strcmp(buf, "pwd")) == 0)
 		do_pwd(sock);
 	else if (bounus_prompt(sock, buf))
 		;
