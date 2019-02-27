@@ -1,6 +1,5 @@
 # 42__Project--ft_p
-a simple, lightweight, concurrent, single-port ftp server implemented in c with select(). 
-
+*A simple, lightweight, concurrent, single-port ftp server implemented in c with select().*
 
 ### Usage
 
@@ -9,7 +8,8 @@ $ make
 $ ./server
 $ ./client localhost 7777
 ```
-
+* server can accept port as parameter.
+* client can accept both ip(can be ip6) and port.
 ### Supported Commands
 ```sh
 ls get put cd pwd
