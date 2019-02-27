@@ -10,10 +10,16 @@
 #                                                                              #
 # **************************************************************************** #
 
-FLAGS =  -Wextra -g -fsanitize=address 
+FLAGS =  -Wall -Werror -Wextra
+
+all: client server
+
 client:
 	gcc $(FLAGS) client.c ./libft/libft.a client_do_op.c client_do_op2.c common.c -o client
 server:
-	gcc $(FLAGS) s.c ./libft/libft.a server_do_op.c common.c -o server
-re:
-	rm server && make server
+	gcc $(FLAGS) s.c ./libft/libft.a server_do_op.c server_helper.c common.c -o server
+clean:
+	rm server client
+fclean: clean
+
+re: clean all

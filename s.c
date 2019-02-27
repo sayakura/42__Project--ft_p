@@ -1,180 +1,125 @@
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include<sys/stat.h>
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   s.c                                                :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: qpeng <marvin@42.fr>                       +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/02/26 12:38:31 by qpeng             #+#    #+#             */
+/*   Updated: 2019/02/26 12:38:32 by qpeng            ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
-#include<fcntl.h>
 #include "s.h"
-#define max_clients 20
+#define MAX_CLIENTS 20
 
-char    *g_home_dir;
-int     g_port;
+char	*g_home_dir;
+int		g_port;
 
-int     socket_setup()
+int		socket_setup_ip6(void)
 {
-    int                 main_sock;
-    struct sockaddr_in  address;
-    int                 opt;
+	int					main_sock;
+	struct sockaddr_in6	address;
+	int					opt;
 
-    opt = 1;
-    if((main_sock = socket(AF_INET , SOCK_STREAM , 0)) == 0)
-    {
-        perror("socket failed");
-        exit(EXIT_FAILURE);
-    }
-    if( setsockopt(main_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,\
-    sizeof(opt)) < 0 )
-    {   
-        perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
-    address.sin_family = AF_INET;
-    address.sin_addr.s_addr = INADDR_ANY;
-    address.sin_port = htons(g_port);
-    if (bind(main_sock, (struct sockaddr *)&address, sizeof(address))<0)
-    {   
-        perror("bind failed");
-        exit(EXIT_FAILURE);
-    }
-    return (main_sock);
+	opt = 1;
+	if ((main_sock = socket(AF_INET6, SOCK_STREAM, 0)) == 0)
+		ft_errorexit("socket failed");
+	if (setsockopt(main_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&opt,\
+													sizeof(opt)) < 0)
+		ft_errorexit("setsockopt failed");
+	address.sin6_family = AF_INET6;
+	address.sin6_port = htons(g_port);
+	address.sin6_addr = in6addr_any;
+	if (bind(main_sock, (struct sockaddr *)&address, sizeof(address)) < 0)
+		ft_errorexit("bind failed");
+	return (main_sock);
 }
 
-
-void     socket_listen(int sock)
+void	handle_request(int *client_socks, fd_set *fd_list)
 {
-    if (listen(sock, 3) < 0)
-    {
-        perror("listen");
-        exit(EXIT_FAILURE);
-    }
-    printf("waiting for connection...\n");
+	int		i;
+
+	i = -1;
+	while (++i < MAX_CLIENTS)
+		if (FD_ISSET(client_socks[i], fd_list))
+			if (!handle_op(client_socks[i]))
+			{
+				printf("Client disconnected.\n");
+				close(client_socks[i]);
+				client_socks[i] = 0;
+			}
 }
 
-int     handle_op(int sock)
+void	connection_handler(int master_s, fd_set *fd_list, int *client_socks)
 {
-    char buf[100];
+	int					connected_s;
+	struct sockaddr_in6	address;
+	int					addrlen;
+	int					i;
 
-    if (recv(sock, buf, 100, 0) == 0)
-        return (0);
-    if ((ft_strncmp(buf, "ls", 2)) == 0 &&
-        (buf[2] == '\0' ||  buf[2] == ' '))
-        s_do_ls(sock, buf + 3);
-    else if ((ft_strncmp(buf, "cd ", 3)) == 0) 
-        s_do_cd(sock, buf + 3);
-    else if ((ft_strncmp(buf, "get ", 4)) == 0)
-        s_do_get(sock, buf + 4);
-    else if ((ft_strncmp(buf, "put ", 4)) == 0)
-        s_do_put(sock, buf + 4);
-    else if ((ft_strncmp(buf, "pwd", 3)) == 0)
-        s_do_pwd(sock);
-    else if ((ft_strncmp(buf, "unlink ", 6)) == 0)
-        s_do_unlink(sock, buf + 7);
-    else if ((ft_strncmp(buf, "rmdir ", 6)) == 0)
-        s_do_rmdir(sock, buf + 6);
-    else if ((ft_strncmp(buf, "mkdir ", 6)) == 0)
-        s_do_mkdir(sock, buf + 6);
-    else
-        return (0);
-    return (1);
+	i = -1;
+	if (FD_ISSET(master_s, fd_list))
+	{
+		if ((connected_s = accept(master_s,
+			(struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0)
+			ft_errorexit("Accept failed.");
+		printf("New connection, socket fd is %d\n", connected_s);
+		while (++i < MAX_CLIENTS)
+			if (client_socks[i] == 0)
+			{
+				client_socks[i] = connected_s;
+				printf("Adding to list of sockets as %d\n", i);
+				break ;
+			}
+	}
 }
 
-void    handle_request(int *client_socks, fd_set *fd_list)
+void	socket_select_setup(int sock)
 {
-    int     i;
-    int     b_read;
-    char    buf[100];
+	fd_set	fd_list;
+	int		max_sock;
+	int		i;
+	int		client_socks[MAX_CLIENTS];
 
-    i = -1;
-    while (++i < max_clients)
-        if (FD_ISSET(client_socks[i], fd_list))
-            if (!handle_op(client_socks[i]))
-            {
-                printf("Client disconnected.\n");
-                close(client_socks[i]);
-                client_socks[i] = 0;
-            }
-
+	ft_bzero(client_socks, sizeof(client_socks));
+	while (1)
+	{
+		i = -1;
+		FD_ZERO(&fd_list);
+		FD_SET(sock, &fd_list);
+		max_sock = sock;
+		while (++i < MAX_CLIENTS)
+		{
+			if (client_socks[i] > 0)
+				FD_SET(client_socks[i], &fd_list);
+			if (client_socks[i] > max_sock)
+				max_sock = client_socks[i];
+		}
+		if (select(max_sock + 1, &fd_list, NULL, NULL, NULL) < 0)
+			ft_errorexit("Select error");
+		connection_handler(sock, &fd_list, client_socks);
+		handle_request(client_socks, &fd_list);
+	}
 }
 
-void    connection_handler(int master_s, fd_set *fd_list, int *client_socks)
+int		main(int ac, char **av)
 {
-    int                 connected_s;
-    struct sockaddr_in  address;   
-    int                 addrlen;
-    int                 i;
+	int	socket;
 
-    i = -1;
-    if (FD_ISSET(master_s, fd_list))
-    {
-        if ((connected_s = accept(master_s,  
-            (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0)
-        {   
-                perror("accept");   
-                exit(EXIT_FAILURE);   
-        }   
-        printf("New connection , socket fd is %d , ip is : %s , port : %d\n" , connected_s ,\
-            inet_ntoa(address.sin_addr) , ntohs(address.sin_port));
-        while (++i < max_clients)
-            if (client_socks[i] == 0)
-            {
-                client_socks[i] = connected_s;
-                printf("Adding to list of sockets as %d\n" , i);   
-                break ;
-            }
-    }
-}
-
-void    socket_select_setup(int sock)
-{
-    fd_set fd_list;
-    int     max_sock;
-    int     i;
-    int     client_socks[max_clients];
-    int     incomming_fd;
-
-    ft_bzero(client_socks, sizeof(client_socks));
-    while (1)
-    {
-        i = -1;
-        FD_ZERO(&fd_list);
-        FD_SET(sock, &fd_list);
-        max_sock = sock;
-        while (++i < max_clients)
-        {
-            if (client_socks[i] > 0)
-                FD_SET(client_socks[i], &fd_list);
-            if (client_socks[i] > max_sock)
-                max_sock = client_socks[i];
-        }
-        incomming_fd = select(max_sock + 1, &fd_list, NULL, NULL, NULL);
-        if ((incomming_fd < 0))   
-            ft_errorexit("select error");
-        connection_handler(sock, &fd_list, client_socks);
-        handle_request(client_socks, &fd_list);
-    }
-}
-
-void    ftp_setup(int ac, char **av)
-{
-    mkdir("root", 0777);
-    chdir("root");
-    if (ac > 1)
-        g_port = ft_atoi(av[1]);
-    else
-        g_port = 7777;
-}
-int     main(int ac, char **av)
-{
-    int sock;
-
-    ftp_setup(ac, av);
-    g_home_dir = getcwd(NULL, 200);
-    sock = socket_setup();
-    socket_listen(sock);
-    printf("Listening on port %d \n", g_port);
-    socket_select_setup(sock);
-    free(g_home_dir);
-    return (0);
+	mkdir("root", 0777);
+	chdir("root");
+	if (ac > 1)
+		g_port = ft_atoi(av[1]);
+	else
+		g_port = 7777;
+	g_home_dir = getcwd(NULL, 200);
+	socket = socket_setup_ip6();
+	printf("waiting for connection...\n");
+	if (listen(socket, 3) < 0)
+		ft_errorexit("Listen failed.");
+	printf("Listening on port %d \n", g_port);
+	socket_select_setup(socket);
+	free(g_home_dir);
+	return (0);
 }

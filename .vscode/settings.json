@@ -4,6 +4,10 @@
         "in.h": "c",
         "fcntl.h": "c",
         "stat.h": "c",
-        "client.h": "c"
+        "client.h": "c",
+        "s.h": "c",
+        "socket.h": "c",
+        "stdio.h": "c",
+        "mman.h": "c"
     }
 }
