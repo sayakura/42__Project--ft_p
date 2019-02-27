@@ -8,12 +8,12 @@ a simple, lightweight, concurrent, single-port ftp server implemented in c with 
 $ make
 $ ./server
 $ ./client localhost 7777
-``
+```
 
 ### Supported commands
 ```sh
 ls get put cd pwd
-``
+```
 ## bounus commands
 | Command | Description |
 | ------ | ------ |
