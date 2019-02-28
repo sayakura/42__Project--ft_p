@@ -92,9 +92,7 @@ int			s_do_cd(int sock, char *path)
 
 void		ls_to_file(int fd, char *arg)
 {
-	dup2(1, 7777);
 	dup2(fd, 1);
-	dup2(1, 7778);
 	dup2(fd, 2);
 	execl("/bin/ls", "ls", ft_strlen(arg) ? arg : NULL, NULL);
 }

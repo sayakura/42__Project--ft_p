@@ -28,7 +28,7 @@ void	do_lpwd(void)
 	char	*path;
 
 	path = getcwd(NULL, 200);
-	printf("» %s%s%s\n", MAGENTA, path, RESET);
+	printf("%s» %s%s\n", MAGENTA, path, RESET);
 	free(path);
 }
 
