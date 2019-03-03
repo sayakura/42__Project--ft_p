@@ -1,4 +1,4 @@
-# 42__Project--ft_p
+# 42__ft_p--FTPServer
 *A simple, lightweight, concurrent, single-port ftp server implemented in c with select().*
 
 # Usage
